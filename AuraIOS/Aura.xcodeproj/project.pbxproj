@@ -1,0 +1,362 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BB0000640000000000000001 /* AuraApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000640000000000000001 /* AuraApp.swift */; };
+		BB0000650000000000000001 /* AuraTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000650000000000000001 /* AuraTheme.swift */; };
+		BB0000660000000000000001 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000660000000000000001 /* MainTabView.swift */; };
+		BB0000670000000000000001 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000670000000000000001 /* ChatView.swift */; };
+		BB0000680000000000000001 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000680000000000000001 /* TodayView.swift */; };
+		BB0000690000000000000001 /* TasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000690000000000000001 /* TasksView.swift */; };
+		BB00006A0000000000000001 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00006A0000000000000001 /* ProfileView.swift */; };
+		BB00006B0000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00006B0000000000000001 /* OnboardingView.swift */; };
+		BB00006C0000000000000001 /* CapabilitiesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00006C0000000000000001 /* CapabilitiesSheet.swift */; };
+		BB00006D0000000000000001 /* ConnectedAppsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00006D0000000000000001 /* ConnectedAppsSheet.swift */; };
+		BB00006E0000000000000001 /* UsageSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00006E0000000000000001 /* UsageSheet.swift */; };
+		BB00006F0000000000000001 /* WidgetsPreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00006F0000000000000001 /* WidgetsPreviewSheet.swift */; };
+		BB0000700000000000000001 /* LiveActivitiesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000700000000000000001 /* LiveActivitiesSheet.swift */; };
+		BB0000710000000000000001 /* CalendarSyncSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000710000000000000001 /* CalendarSyncSheet.swift */; };
+		BB0000720000000000000001 /* AuraEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000720000000000000001 /* AuraEvent.swift */; };
+		BB0000730000000000000001 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000730000000000000001 /* ChatMessage.swift */; };
+		BB0000740000000000000001 /* Routine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000740000000000000001 /* Routine.swift */; };
+		BB0000750000000000000001 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000750000000000000001 /* UserProfile.swift */; };
+		BB0000760000000000000001 /* ConnectedApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000760000000000000001 /* ConnectedApp.swift */; };
+		BB0000770000000000000001 /* PermissionsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000770000000000000001 /* PermissionsManager.swift */; };
+		BB0000780000000000000001 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000780000000000000001 /* NotificationService.swift */; };
+		BB0000790000000000000001 /* NotificationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000790000000000000001 /* NotificationDelegate.swift */; };
+		BB00007A0000000000000001 /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00007A0000000000000001 /* CalendarService.swift */; };
+		BB00007B0000000000000001 /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00007B0000000000000001 /* Habit.swift */; };
+		BB00007C0000000000000001 /* UserMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00007C0000000000000001 /* UserMemory.swift */; };
+		BB00007D0000000000000001 /* GoalPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00007D0000000000000001 /* GoalPlan.swift */; };
+		BB00007E0000000000000001 /* HabitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00007E0000000000000001 /* HabitService.swift */; };
+		BB00007F0000000000000001 /* MemoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00007F0000000000000001 /* MemoryService.swift */; };
+		BB0000800000000000000001 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000800000000000000001 /* AIService.swift */; };
+		BB0000810000000000000001 /* MemoryBankSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000810000000000000001 /* MemoryBankSheet.swift */; };
+		BB0000820000000000000001 /* AnalyticsReportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000820000000000000001 /* AnalyticsReportSheet.swift */; };
+		BB0000830000000000000001 /* HabitsTrackerSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000830000000000000001 /* HabitsTrackerSection.swift */; };
+		BB0000840000000000000001 /* GoalPlansSectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000840000000000000001 /* GoalPlansSectionView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A00000010000000000000001 /* Aura.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aura.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC0000010000000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA0000640000000000000001 /* AuraApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AuraApp.swift"; sourceTree = "<group>"; };
+		AA0000650000000000000001 /* AuraTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Theme/AuraTheme.swift"; sourceTree = "<group>"; };
+		AA0000660000000000000001 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/MainTabView.swift"; sourceTree = "<group>"; };
+		AA0000670000000000000001 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Chat/ChatView.swift"; sourceTree = "<group>"; };
+		AA0000680000000000000001 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Today/TodayView.swift"; sourceTree = "<group>"; };
+		AA0000690000000000000001 /* TasksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Tasks/TasksView.swift"; sourceTree = "<group>"; };
+		AA00006A0000000000000001 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Profile/ProfileView.swift"; sourceTree = "<group>"; };
+		AA00006B0000000000000001 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Onboarding/OnboardingView.swift"; sourceTree = "<group>"; };
+		AA00006C0000000000000001 /* CapabilitiesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Modals/CapabilitiesSheet.swift"; sourceTree = "<group>"; };
+		AA00006D0000000000000001 /* ConnectedAppsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Modals/ConnectedAppsSheet.swift"; sourceTree = "<group>"; };
+		AA00006E0000000000000001 /* UsageSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Modals/UsageSheet.swift"; sourceTree = "<group>"; };
+		AA00006F0000000000000001 /* WidgetsPreviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Modals/WidgetsPreviewSheet.swift"; sourceTree = "<group>"; };
+		AA0000700000000000000001 /* LiveActivitiesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Modals/LiveActivitiesSheet.swift"; sourceTree = "<group>"; };
+		AA0000710000000000000001 /* CalendarSyncSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Modals/CalendarSyncSheet.swift"; sourceTree = "<group>"; };
+		AA0000720000000000000001 /* AuraEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/AuraEvent.swift"; sourceTree = "<group>"; };
+		AA0000730000000000000001 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/ChatMessage.swift"; sourceTree = "<group>"; };
+		AA0000740000000000000001 /* Routine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/Routine.swift"; sourceTree = "<group>"; };
+		AA0000750000000000000001 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/UserProfile.swift"; sourceTree = "<group>"; };
+		AA0000760000000000000001 /* ConnectedApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/ConnectedApp.swift"; sourceTree = "<group>"; };
+		AA0000770000000000000001 /* PermissionsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/PermissionsManager.swift"; sourceTree = "<group>"; };
+		AA0000780000000000000001 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/NotificationService.swift"; sourceTree = "<group>"; };
+		AA0000790000000000000001 /* NotificationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/NotificationDelegate.swift"; sourceTree = "<group>"; };
+		AA00007A0000000000000001 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/CalendarService.swift"; sourceTree = "<group>"; };
+		AA00007B0000000000000001 /* Habit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/Habit.swift"; sourceTree = "<group>"; };
+		AA00007C0000000000000001 /* UserMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/UserMemory.swift"; sourceTree = "<group>"; };
+		AA00007D0000000000000001 /* GoalPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/GoalPlan.swift"; sourceTree = "<group>"; };
+		AA00007E0000000000000001 /* HabitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/HabitService.swift"; sourceTree = "<group>"; };
+		AA00007F0000000000000001 /* MemoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/MemoryService.swift"; sourceTree = "<group>"; };
+		AA0000800000000000000001 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/AIService.swift"; sourceTree = "<group>"; };
+		AA0000810000000000000001 /* MemoryBankSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Modals/MemoryBankSheet.swift"; sourceTree = "<group>"; };
+		AA0000820000000000000001 /* AnalyticsReportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Modals/AnalyticsReportSheet.swift"; sourceTree = "<group>"; };
+		AA0000830000000000000001 /* HabitsTrackerSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Today/HabitsTrackerSection.swift"; sourceTree = "<group>"; };
+		AA0000840000000000000001 /* GoalPlansSectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Tasks/GoalPlansSectionView.swift"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A00000020000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A00000030000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A00000040000000000000001 /* Aura */,
+				A00000050000000000000001 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A00000050000000000000001 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A00000010000000000000001 /* Aura.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A00000040000000000000001 /* Aura */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000640000000000000001 /* AuraApp.swift */,
+				AA0000650000000000000001 /* AuraTheme.swift */,
+				AA0000660000000000000001 /* MainTabView.swift */,
+				AA0000670000000000000001 /* ChatView.swift */,
+				AA0000680000000000000001 /* TodayView.swift */,
+				AA0000690000000000000001 /* TasksView.swift */,
+				AA00006A0000000000000001 /* ProfileView.swift */,
+				AA00006B0000000000000001 /* OnboardingView.swift */,
+				AA00006C0000000000000001 /* CapabilitiesSheet.swift */,
+				AA00006D0000000000000001 /* ConnectedAppsSheet.swift */,
+				AA00006E0000000000000001 /* UsageSheet.swift */,
+				AA00006F0000000000000001 /* WidgetsPreviewSheet.swift */,
+				AA0000700000000000000001 /* LiveActivitiesSheet.swift */,
+				AA0000710000000000000001 /* CalendarSyncSheet.swift */,
+				AA0000720000000000000001 /* AuraEvent.swift */,
+				AA0000730000000000000001 /* ChatMessage.swift */,
+				AA0000740000000000000001 /* Routine.swift */,
+				AA0000750000000000000001 /* UserProfile.swift */,
+				AA0000760000000000000001 /* ConnectedApp.swift */,
+				AA0000770000000000000001 /* PermissionsManager.swift */,
+				AA0000780000000000000001 /* NotificationService.swift */,
+				AA0000790000000000000001 /* NotificationDelegate.swift */,
+				AA00007A0000000000000001 /* CalendarService.swift */,
+				AA00007B0000000000000001 /* Habit.swift */,
+				AA00007C0000000000000001 /* UserMemory.swift */,
+				AA00007D0000000000000001 /* GoalPlan.swift */,
+				AA00007E0000000000000001 /* HabitService.swift */,
+				AA00007F0000000000000001 /* MemoryService.swift */,
+				AA0000800000000000000001 /* AIService.swift */,
+				AA0000810000000000000001 /* MemoryBankSheet.swift */,
+				AA0000820000000000000001 /* AnalyticsReportSheet.swift */,
+				AA0000830000000000000001 /* HabitsTrackerSection.swift */,
+				AA0000840000000000000001 /* GoalPlansSectionView.swift */,
+				CC0000010000000000000001 /* Info.plist */,
+			);
+			path = Aura;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A00000060000000000000001 /* Aura */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A00000070000000000000001 /* Build configuration list for PBXNativeTarget "Aura" */;
+			buildPhases = (
+				A00000080000000000000001 /* Sources */,
+				A00000020000000000000001 /* Frameworks */,
+				A00000090000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Aura;
+			productName = Aura;
+			productReference = A00000010000000000000001 /* Aura.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A00000100000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					A00000060000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = A00000110000000000000001 /* Build configuration list for PBXProject "Aura" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A00000030000000000000001;
+			productRefGroup = A00000050000000000000001 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A00000060000000000000001 /* Aura */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A00000090000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A00000080000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB0000640000000000000001 /* AuraApp.swift in Sources */,
+				BB0000650000000000000001 /* AuraTheme.swift in Sources */,
+				BB0000660000000000000001 /* MainTabView.swift in Sources */,
+				BB0000670000000000000001 /* ChatView.swift in Sources */,
+				BB0000680000000000000001 /* TodayView.swift in Sources */,
+				BB0000690000000000000001 /* TasksView.swift in Sources */,
+				BB00006A0000000000000001 /* ProfileView.swift in Sources */,
+				BB00006B0000000000000001 /* OnboardingView.swift in Sources */,
+				BB00006C0000000000000001 /* CapabilitiesSheet.swift in Sources */,
+				BB00006D0000000000000001 /* ConnectedAppsSheet.swift in Sources */,
+				BB00006E0000000000000001 /* UsageSheet.swift in Sources */,
+				BB00006F0000000000000001 /* WidgetsPreviewSheet.swift in Sources */,
+				BB0000700000000000000001 /* LiveActivitiesSheet.swift in Sources */,
+				BB0000710000000000000001 /* CalendarSyncSheet.swift in Sources */,
+				BB0000720000000000000001 /* AuraEvent.swift in Sources */,
+				BB0000730000000000000001 /* ChatMessage.swift in Sources */,
+				BB0000740000000000000001 /* Routine.swift in Sources */,
+				BB0000750000000000000001 /* UserProfile.swift in Sources */,
+				BB0000760000000000000001 /* ConnectedApp.swift in Sources */,
+				BB0000770000000000000001 /* PermissionsManager.swift in Sources */,
+				BB0000780000000000000001 /* NotificationService.swift in Sources */,
+				BB0000790000000000000001 /* NotificationDelegate.swift in Sources */,
+				BB00007A0000000000000001 /* CalendarService.swift in Sources */,
+				BB00007B0000000000000001 /* Habit.swift in Sources */,
+				BB00007C0000000000000001 /* UserMemory.swift in Sources */,
+				BB00007D0000000000000001 /* GoalPlan.swift in Sources */,
+				BB00007E0000000000000001 /* HabitService.swift in Sources */,
+				BB00007F0000000000000001 /* MemoryService.swift in Sources */,
+				BB0000800000000000000001 /* AIService.swift in Sources */,
+				BB0000810000000000000001 /* MemoryBankSheet.swift in Sources */,
+				BB0000820000000000000001 /* AnalyticsReportSheet.swift in Sources */,
+				BB0000830000000000000001 /* HabitsTrackerSection.swift in Sources */,
+				BB0000840000000000000001 /* GoalPlansSectionView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A00000120000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A00000130000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		A00000140000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Aura/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aura.memoryai;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A00000150000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Aura/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aura.memoryai;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A00000110000000000000001 /* Build configuration list for PBXProject "Aura" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000120000000000000001 /* Debug */,
+				A00000130000000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A00000070000000000000001 /* Build configuration list for PBXNativeTarget "Aura" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000140000000000000001 /* Debug */,
+				A00000150000000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = A00000100000000000000001 /* Project object */;
+}
