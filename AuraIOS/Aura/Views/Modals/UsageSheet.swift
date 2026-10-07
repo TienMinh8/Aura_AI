@@ -70,11 +70,21 @@ struct UsageSheet: View {
                             // API Key Field (if not local)
                             if AIService.shared.selectedProvider != .local {
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text("API Key (OpenAI / Gemini / Custom)")
-                                        .font(.system(size: 11, weight: .semibold))
-                                        .foregroundStyle(Color.auraTextSecondary)
+                                    HStack {
+                                        Text(AIService.shared.selectedProvider == .gemini ? "Google Gemini API Key" : "API Key")
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .foregroundStyle(Color.auraTextSecondary)
+                                        
+                                        Spacer()
+                                        
+                                        if AIService.shared.selectedProvider == .gemini {
+                                            Text("Miễn phí tại ai.google.dev")
+                                                .font(.system(size: 10, weight: .medium))
+                                                .foregroundStyle(Color.auraAmber)
+                                        }
+                                    }
                                     
-                                    SecureField("sk-...", text: Binding(
+                                    SecureField(AIService.shared.selectedProvider == .gemini ? "AIzaSy..." : "sk-...", text: Binding(
                                         get: { AIService.shared.apiKey },
                                         set: { AIService.shared.apiKey = $0 }
                                     ))
@@ -89,25 +99,49 @@ struct UsageSheet: View {
                                     )
                                 }
                                 
-                                // Model Name Field
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text("Model Name (e.g. gpt-4o-mini, gemini-1.5-flash)")
+                                // Model Selection
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Model Selection")
                                         .font(.system(size: 11, weight: .semibold))
                                         .foregroundStyle(Color.auraTextSecondary)
                                     
-                                    TextField("Model identifier", text: Binding(
-                                        get: { AIService.shared.modelName },
-                                        set: { AIService.shared.modelName = $0 }
-                                    ))
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 12)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 14)
-                                            .fill(Color.white.opacity(0.04))
-                                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.auraBorder, lineWidth: 0.8))
-                                    )
+                                    if AIService.shared.selectedProvider == .gemini {
+                                        // Quick Model Presets for Gemini
+                                        HStack(spacing: 8) {
+                                            ForEach(["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"], id: \.self) { model in
+                                                let isSelected = AIService.shared.modelName == model
+                                                Button {
+                                                    AuraHaptic.selection()
+                                                    AIService.shared.modelName = model
+                                                } label: {
+                                                    Text(model.replacingOccurrences(of: "gemini-", with: ""))
+                                                        .font(.system(size: 12, weight: isSelected ? .bold : .medium))
+                                                        .foregroundStyle(isSelected ? .black : .white)
+                                                        .padding(.horizontal, 10)
+                                                        .padding(.vertical, 6)
+                                                        .background(
+                                                            Capsule()
+                                                                .fill(isSelected ? Color.auraAmber : Color.white.opacity(0.06))
+                                                        )
+                                                }
+                                                .buttonStyle(.plain)
+                                            }
+                                        }
+                                    } else {
+                                        TextField("Model identifier (e.g. gpt-4o-mini)", text: Binding(
+                                            get: { AIService.shared.modelName },
+                                            set: { AIService.shared.modelName = $0 }
+                                        ))
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 12)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 14)
+                                                .fill(Color.white.opacity(0.04))
+                                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.auraBorder, lineWidth: 0.8))
+                                        )
+                                    }
                                 }
                             }
                         }

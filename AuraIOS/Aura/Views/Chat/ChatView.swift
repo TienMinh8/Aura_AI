@@ -93,7 +93,7 @@ struct ChatView: View {
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(.white)
                         
-                        Text(speechService.isRecording ? "Listening..." : (isAIThinking ? "Thinking..." : "Memory AI · Active"))
+                        Text(speechService.isRecording ? "Listening..." : (isAIThinking ? "Gemini is thinking..." : (AIService.shared.selectedProvider == .gemini ? "Gemini AI · Active" : "Memory AI · Active")))
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(speechService.isRecording ? Color.auraAmber : Color.auraTextSecondary)
                     }

@@ -8,21 +8,21 @@ final class AIService {
     
     // MARK: - AI Provider Configuration
     enum AIProvider: String, CaseIterable, Identifiable {
-        case local = "Offline Engine (Nova Local)"
+        case gemini = "Google Gemini (1.5 Flash / 2.0)"
         case openAI = "OpenAI (GPT-4o / GPT-4o-mini)"
-        case gemini = "Google Gemini (1.5 Flash)"
         case custom = "Custom OpenAI-compatible (Groq / Ollama)"
+        case local = "Offline Engine (Nova Local)"
         
         var id: String { rawValue }
     }
     
-    @AppStorage("aura_ai_provider") var selectedProviderRaw: String = AIProvider.local.rawValue
+    @AppStorage("aura_ai_provider") var selectedProviderRaw: String = AIProvider.gemini.rawValue
     @AppStorage("aura_ai_key") var apiKey: String = ""
-    @AppStorage("aura_ai_model") var modelName: String = "gpt-4o-mini"
+    @AppStorage("aura_ai_model") var modelName: String = "gemini-1.5-flash"
     @AppStorage("aura_ai_endpoint") var customEndpoint: String = "https://api.openai.com/v1/chat/completions"
     
     var selectedProvider: AIProvider {
-        get { AIProvider(rawValue: selectedProviderRaw) ?? .local }
+        get { AIProvider(rawValue: selectedProviderRaw) ?? .gemini }
         set { selectedProviderRaw = newValue.rawValue }
     }
     
@@ -44,8 +44,24 @@ final class AIService {
         memories: [UserMemory],
         onChunk: ((String) -> Void)? = nil
     ) async -> AIResponse {
+        let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // If Gemini or Cloud provider is chosen but no API key is set yet
+        if selectedProvider != .local && trimmedKey.isEmpty {
+            let localFallback = processLocalQuery(query, in: context, events: events, habits: habits, memories: memories)
+            let hint = selectedProvider == .gemini 
+                ? "\n\n💡 *Gợi ý: Nova đang sẵn sàng kết nối Google Gemini. Chạm vào nút \"Nova\" trên đầu màn hình để dán Gemini API Key (miễn phí tại Google AI Studio) nhé.*"
+                : "\n\n💡 *Gợi ý: Hãy nhập API Key trong phần Nova (Token Usage) để sử dụng \(selectedProvider.rawValue).*"
+            return AIResponse(
+                content: localFallback.content + hint,
+                hasAction: localFallback.hasAction,
+                actionTitle: localFallback.actionTitle,
+                actionType: localFallback.actionType
+            )
+        }
+        
         // If an API key is provided and a cloud provider is active, attempt Cloud LLM
-        if !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && selectedProvider != .local {
+        if !trimmedKey.isEmpty && selectedProvider != .local {
             do {
                 let cloudResult = try await callCloudLLM(
                     query: query,
@@ -58,6 +74,14 @@ final class AIService {
                 return cloudResult
             } catch {
                 print("Cloud LLM call failed (\(error.localizedDescription)), falling back to Local Engine.")
+                let localFallback = processLocalQuery(query, in: context, events: events, habits: habits, memories: memories)
+                let note = "\n\n⚠️ *Không thể kết nối \(selectedProvider.rawValue) (\(error.localizedDescription)). Đã chuyển sang bộ xử lý nội bộ an toàn.*"
+                return AIResponse(
+                    content: localFallback.content + note,
+                    hasAction: localFallback.hasAction,
+                    actionTitle: localFallback.actionTitle,
+                    actionType: localFallback.actionType
+                )
             }
         }
         
@@ -76,7 +100,7 @@ final class AIService {
         return processLocalQuery(query, in: context, events: events, habits: habits, memories: memories)
     }
     
-    // MARK: - Cloud LLM Caller (OpenAI / Gemini / Custom Compatible)
+    // MARK: - Cloud LLM Caller (Google Gemini / OpenAI / Custom Compatible)
     private func callCloudLLM(
         query: String,
         in context: ModelContext,
@@ -106,8 +130,11 @@ final class AIService {
         
         let endpointURL: URL
         if selectedProvider == .gemini {
-            let model = modelName.isEmpty ? "gemini-1.5-flash" : modelName
-            endpointURL = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(apiKey)")!
+            let model = modelName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "gemini-1.5-flash" : modelName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(apiKey.trimmingCharacters(in: .whitespacesAndNewlines))") else {
+                throw NSError(domain: "AIService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid Gemini endpoint URL"])
+            }
+            endpointURL = url
         } else {
             let urlString = selectedProvider == .custom && !customEndpoint.isEmpty ? customEndpoint : "https://api.openai.com/v1/chat/completions"
             endpointURL = URL(string: urlString)!
@@ -117,7 +144,24 @@ final class AIService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        if selectedProvider != .gemini {
+        if selectedProvider == .gemini {
+            let payload: [String: Any] = [
+                "system_instruction": [
+                    "parts": [["text": systemPrompt]]
+                ],
+                "contents": [
+                    [
+                        "role": "user",
+                        "parts": [["text": query]]
+                    ]
+                ],
+                "generationConfig": [
+                    "temperature": 0.7,
+                    "maxOutputTokens": 1000
+                ]
+            ]
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        } else {
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
             let payload: [String: Any] = [
                 "model": modelName.isEmpty ? "gpt-4o-mini" : modelName,
@@ -129,21 +173,17 @@ final class AIService {
                 "max_tokens": 500
             ]
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-        } else {
-            let payload: [String: Any] = [
-                "contents": [
-                    [
-                        "role": "user",
-                        "parts": [["text": "\(systemPrompt)\n\nUser: \(query)"]]
-                    ]
-                ]
-            ]
-            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         }
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw NSError(domain: "AIService", code: -1, userInfo: [NSLocalizedDescriptionKey: "HTTP Error \(response)"])
+            var detailMsg = "HTTP Status \((response as? HTTPURLResponse)?.statusCode ?? -1)"
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let errObj = json["error"] as? [String: Any],
+               let msg = errObj["message"] as? String {
+                detailMsg = msg
+            }
+            throw NSError(domain: "AIService", code: -1, userInfo: [NSLocalizedDescriptionKey: detailMsg])
         }
         
         var replyText = ""
