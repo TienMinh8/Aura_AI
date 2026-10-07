@@ -9,32 +9,50 @@ struct TasksView: View {
     @Query(sort: \Habit.createdAt) private var habits: [Habit]
     @Query(sort: \GoalPlan.createdAt, order: .reverse) private var goalPlans: [GoalPlan]
     
-    @State private var selectedCategory: Int = 0 // 0: Routines, 1: Goal Plans, 2: Habits
     @State private var showCapabilitiesSheet: Bool = false
-    
-    let categories = [
-        ("clock.arrow.circlepath", "Tác vụ tự động"),
-        ("target", "Kế hoạch đa bước"),
-        ("flame.fill", "Thói quen")
-    ]
+    @State private var showGoalPlansSheet: Bool = false
+    @State private var showHabitsSheet: Bool = false
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: 24) {
                 // Header
                 HStack {
-                    Text("Tasks & Routines")
-                        .font(.system(size: 32, weight: .bold, design: .serif))
+                    Text("Tasks")
+                        .font(.system(size: 34, weight: .bold, design: .serif))
                         .foregroundStyle(.white)
                     
                     Spacer()
                     
-                    Button {
-                        AuraHaptic.selection()
-                        onNavigateTab(0) // Open Chat to set up custom routine/goal
+                    Menu {
+                        Button {
+                            onNavigateTab(0)
+                        } label: {
+                            Label("New Routine with Nova", systemImage: "sparkles")
+                        }
+                        
+                        Button {
+                            showGoalPlansSheet = true
+                        } label: {
+                            Label("Multi-step Goal Plans", systemImage: "target")
+                        }
+                        
+                        Button {
+                            showHabitsSheet = true
+                        } label: {
+                            Label("Habits & Streaks", systemImage: "flame.fill")
+                        }
+                        
+                        Divider()
+                        
+                        Button {
+                            showCapabilitiesSheet = true
+                        } label: {
+                            Label("What Nova can do", systemImage: "lightbulb.fill")
+                        }
                     } label: {
                         Image(systemName: "plus")
-                            .font(.system(size: 18, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(Color.auraAmber)
                             .padding(10)
                             .background(Circle().fill(Color.auraCard))
@@ -43,45 +61,8 @@ struct TasksView: View {
                 }
                 .padding(.top, 16)
                 
-                // 3-way Category Pill Selector
-                HStack(spacing: 8) {
-                    ForEach(0..<categories.count, id: \.self) { idx in
-                        let isSelected = selectedCategory == idx
-                        Button {
-                            AuraHaptic.selection()
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                selectedCategory = idx
-                            }
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: categories[idx].0)
-                                    .font(.system(size: 12))
-                                Text(categories[idx].1)
-                                    .font(.system(size: 12, weight: .semibold))
-                            }
-                            .foregroundStyle(isSelected ? .black : .white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule()
-                                    .fill(isSelected ? Color.auraAmber : Color.auraCard)
-                                    .overlay(
-                                        Capsule().stroke(isSelected ? Color.clear : Color.auraBorder, lineWidth: 0.8)
-                                    )
-                            )
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // Content based on category
-                if selectedCategory == 0 {
-                    routinesSection
-                } else if selectedCategory == 1 {
-                    goalPlansSection
-                } else {
-                    habitsListSection
-                }
+                // Routines Section (Clock + List)
+                routinesSection
                 
                 // Bottom link
                 Button {
@@ -89,7 +70,7 @@ struct TasksView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Text("☀️🥛📜")
-                        Text("Những gì Nova có thể làm")
+                        Text("What else Memory can do")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(.white.opacity(0.85))
                         Image(systemName: "chevron.right")
@@ -108,6 +89,32 @@ struct TasksView: View {
         .sheet(isPresented: $showCapabilitiesSheet) {
             CapabilitiesSheet()
         }
+        .sheet(isPresented: $showGoalPlansSheet) {
+            NavigationStack {
+                ZStack {
+                    Color.auraBackground.ignoresSafeArea()
+                    ScrollView {
+                        goalPlansSection
+                            .padding(16)
+                    }
+                }
+                .navigationTitle("Goal Plans")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+        }
+        .sheet(isPresented: $showHabitsSheet) {
+            NavigationStack {
+                ZStack {
+                    Color.auraBackground.ignoresSafeArea()
+                    ScrollView {
+                        habitsListSection
+                            .padding(16)
+                    }
+                }
+                .navigationTitle("Habits Tracker")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+        }
     }
     
     // MARK: - Routines Section (Tác vụ tự động)
@@ -120,11 +127,11 @@ struct TasksView: View {
             
             // Titles
             VStack(spacing: 6) {
-                Text("Tác vụ tự động mỗi ngày")
-                    .font(.system(size: 22, weight: .bold))
+                Text("Let Nova take on the routine")
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(.white)
                 
-                Text("Bật bất kỳ routine nào — Nova sẽ tự động nhắc nhở đúng giờ.")
+                Text("Turn one on — it'll arrive by itself, every day.")
                     .font(.system(size: 14))
                     .foregroundStyle(Color.auraTextSecondary)
                     .multilineTextAlignment(.center)
@@ -144,7 +151,7 @@ struct TasksView: View {
                     dividerLine
                 }
                 
-                // Create custom routine row
+                // Something else row (matching reference IMG_8728)
                 Button {
                     AuraHaptic.selection()
                     onNavigateTab(0)
@@ -157,11 +164,11 @@ struct TasksView: View {
                             .background(Circle().fill(Color.white.opacity(0.06)))
                         
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("Tạo Routine tự động mới")
+                            Text("Something else")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(.white)
                             
-                            Text("Mô tả trong Chat — Nova sẽ lập lịch chạy")
+                            Text("Describe it in chat — Nova will set it up")
                                 .font(.system(size: 12))
                                 .foregroundStyle(Color.auraTextSecondary)
                         }
@@ -311,14 +318,17 @@ struct TasksView: View {
         }
     }
     
-    // MARK: - Routine Row
+    // MARK: - Routine Row (IMG_8728)
     private func routineRow(routine: Routine) -> some View {
         HStack(spacing: 14) {
             Image(systemName: routine.iconName)
-                .font(.system(size: 20))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(Color.auraAmber)
                 .frame(width: 44, height: 44)
-                .background(Circle().fill(Color.auraAmber.opacity(0.12)))
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(white: 0.15))
+                )
             
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 8) {
@@ -327,7 +337,7 @@ struct TasksView: View {
                         .foregroundStyle(.white)
                     
                     Text(routine.timeString)
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.system(size: 13, weight: .regular))
                         .foregroundStyle(Color.auraTextSecondary)
                 }
                 
@@ -338,21 +348,32 @@ struct TasksView: View {
             
             Spacer()
             
-            Toggle("", isOn: Binding(
-                get: { routine.isEnabled },
-                set: { val in
-                    AuraHaptic.selection()
-                    routine.isEnabled = val
-                    if val {
+            // Sleek "Turn on" / "Active" pill button (IMG_8728)
+            Button {
+                AuraHaptic.selection()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    routine.isEnabled.toggle()
+                    if routine.isEnabled {
                         NotificationService.shared.scheduleRoutine(for: routine)
                     } else {
                         NotificationService.shared.cancelNotification(identifier: routine.notificationIdentifier)
                     }
                     try? modelContext.save()
                 }
-            ))
-            .labelsHidden()
-            .tint(Color.auraAmber)
+            } label: {
+                Text(routine.isEnabled ? "Active" : "Turn on")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(routine.isEnabled ? Color.auraAmber : .white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(
+                        Capsule()
+                            .fill(routine.isEnabled ? Color.auraAmber.opacity(0.18) : Color(white: 0.22))
+                            .overlay(
+                                Capsule().stroke(routine.isEnabled ? Color.auraAmber.opacity(0.4) : Color.clear, lineWidth: 0.8)
+                            )
+                    )
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
@@ -396,14 +417,10 @@ struct RetroAlarmClockView: View {
             }
             
             // Top handle & hammer
-            VStack(spacing: 0) {
-                Capsule()
-                    .fill(Color.auraAmber)
-                    .frame(width: 24, height: 6)
-                    .offset(y: -52)
-                Spacer()
-            }
-            .frame(height: 120)
+            Capsule()
+                .fill(Color.auraAmber)
+                .frame(width: 24, height: 6)
+                .offset(y: -48)
             
             // Legs
             HStack(spacing: 66) {

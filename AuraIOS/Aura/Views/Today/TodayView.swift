@@ -10,10 +10,19 @@ struct TodayView: View {
     
     @State private var selectedDay: Int = Calendar.current.component(.day, from: Date())
     @State private var isTimelineView: Bool = false
+    @State private var selectedDaysRange: Int = 1 // 1, 3, 7
     @State private var showCapabilitiesSheet: Bool = false
     @State private var showCalendarSyncSheet: Bool = false
     @State private var showAnalyticsSheet: Bool = false
-    @State private var isSyncing: Bool = false
+    
+    // Filters for layers menu (IMG_8729)
+    @State private var showEventsFilter: Bool = true
+    @State private var showGoogleFilter: Bool = true
+    @State private var showAppleFilter: Bool = true
+    @State private var showTasksFilter: Bool = true
+    @State private var showRecordingsFilter: Bool = true
+    @State private var showPostsFilter: Bool = true
+    @State private var showAutomationsFilter: Bool = false
     
     let days: [(name: String, day: Int)] = [
         ("SA", 3), ("SU", 4), ("MO", 5), ("TU", 6),
@@ -29,46 +38,45 @@ struct TodayView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
+        ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Header Title & View Toggle
+                    // Header Title & Layers Menu (IMG_8724, IMG_8729)
                     HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Oct 2026")
-                                .font(.system(size: 32, weight: .bold, design: .serif))
-                                .foregroundStyle(.white)
-                            
-                            Text("\(allEvents.count) items tracked in Aura")
-                                .font(.system(size: 12))
-                                .foregroundStyle(Color.auraTextMuted)
-                        }
+                        Text("Oct 2026")
+                            .font(.system(size: 34, weight: .bold, design: .serif))
+                            .foregroundStyle(.white)
                         
                         Spacer()
                         
-                        // Calendar Sync Quick Button
-                        Button {
-                            AuraHaptic.selection()
-                            showCalendarSyncSheet = true
-                        } label: {
-                            Image(systemName: "calendar.badge.clock")
-                                .font(.system(size: 16))
-                                .foregroundStyle(Color.auraAmber)
-                                .padding(10)
-                                .background(Circle().fill(Color.auraCard))
-                                .overlay(Circle().stroke(Color.auraBorder, lineWidth: 0.8))
-                        }
-                        
-                        // View Switcher (List vs Grid/Timeline)
-                        Button {
-                            AuraHaptic.selection()
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                isTimelineView.toggle()
+                        // Show / Layers Filter Menu (IMG_8729)
+                        Menu {
+                            Text("Show")
+                            Toggle(isOn: $showEventsFilter) {
+                                Label("Events", systemImage: "calendar")
+                            }
+                            Toggle(isOn: $showGoogleFilter) {
+                                Label("Google", systemImage: "g.circle")
+                            }
+                            Toggle(isOn: $showAppleFilter) {
+                                Label("Apple", systemImage: "apple.logo")
+                            }
+                            Toggle(isOn: $showTasksFilter) {
+                                Label("Tasks", systemImage: "checklist")
+                            }
+                            Toggle(isOn: $showRecordingsFilter) {
+                                Label("Recordings", systemImage: "waveform")
+                            }
+                            Toggle(isOn: $showPostsFilter) {
+                                Label("Posts", systemImage: "paperplane")
+                            }
+                            Toggle(isOn: $showAutomationsFilter) {
+                                Label("Automations", systemImage: "arrow.triangle.2.circlepath")
                             }
                         } label: {
-                            Image(systemName: isTimelineView ? "list.bullet" : "square.3.layers.3d")
+                            Image(systemName: "square.3.layers.3d")
                                 .font(.system(size: 16))
-                                .foregroundStyle(isTimelineView ? Color.auraAmber : Color.white)
+                                .foregroundStyle(Color.white)
                                 .padding(10)
                                 .background(Circle().fill(Color.auraCard))
                                 .overlay(Circle().stroke(Color.auraBorder, lineWidth: 0.8))
@@ -79,14 +87,6 @@ struct TodayView: View {
                     // Weekly Date Strip
                     weeklyStrip
                     
-                    // Habits Tracker Section (Nova Năng lực #2)
-                    HabitsTrackerSection {
-                        showAnalyticsSheet = true
-                    }
-                    
-                    // Routines Horizontal Scroll Strip
-                    routinesStrip
-                    
                     // Main View (Events List or Timeline)
                     if isTimelineView {
                         timelineView
@@ -94,7 +94,26 @@ struct TodayView: View {
                         if eventsForSelectedDay.isEmpty {
                             emptyStateCard
                         } else {
-                            eventsList
+                            VStack(spacing: 16) {
+                                eventsList
+                                
+                                // Sub link at bottom of list
+                                Button {
+                                    showCapabilitiesSheet = true
+                                } label: {
+                                    HStack(spacing: 8) {
+                                        Text("☀️🥛📜")
+                                        Text("What else Memory can do")
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundStyle(.white.opacity(0.85))
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundStyle(Color.auraTextMuted)
+                                    }
+                                    .padding(.vertical, 8)
+                                }
+                                .padding(.top, 4)
+                            }
                         }
                     }
                     
@@ -120,10 +139,20 @@ struct TodayView: View {
         }
     }
     
+    private var displayedDays: [(name: String, day: Int)] {
+        if isTimelineView && selectedDaysRange == 3 {
+            return [("TU", 6), ("WE", 7), ("TH", 8)]
+        } else if isTimelineView && selectedDaysRange == 7 {
+            return [("MO", 5), ("TU", 6), ("WE", 7), ("TH", 8), ("FR", 9), ("SA", 10), ("SU", 11)]
+        } else {
+            return days
+        }
+    }
+    
     // MARK: - Weekly Date Strip
     private var weeklyStrip: some View {
         HStack(spacing: 8) {
-            ForEach(days, id: \.day) { item in
+            ForEach(displayedDays, id: \.day) { item in
                 let isSelected = selectedDay == item.day
                 
                 Button {
@@ -310,11 +339,11 @@ struct TodayView: View {
             .padding(.top, 40)
             
             VStack(spacing: 8) {
-                Text("Nothing planned for day \(selectedDay)")
-                    .font(.system(size: 20, weight: .bold))
+                Text("Nothing planned today")
+                    .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(.white)
                 
-                Text("Ask Nova chat to plan it — or sync with your Apple Calendar.")
+                Text("Ask the chat to plan it — or add one below.")
                     .font(.system(size: 14))
                     .foregroundStyle(Color.auraTextSecondary)
                     .multilineTextAlignment(.center)
@@ -328,15 +357,16 @@ struct TodayView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "plus")
                         .font(.system(size: 15, weight: .bold))
-                    Text("Ask Nova to plan")
+                    Text("Add event")
                         .font(.system(size: 15, weight: .semibold))
                 }
                 .foregroundStyle(.black)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 28)
                 .padding(.vertical, 12)
                 .background(Capsule().fill(Color.auraAmber))
                 .shadow(color: Color.auraAmber.opacity(0.35), radius: 10, y: 4)
             }
+            .padding(.top, 6)
             .padding(.top, 6)
             
             // Sub Link
@@ -358,90 +388,161 @@ struct TodayView: View {
         }
     }
     
-    // MARK: - Timeline View
+    // MARK: - Timeline View (IMG_8724, IMG_8725, IMG_8727)
     private var timelineView: some View {
-        VStack(spacing: 10) {
-            ForEach(8..<20) { hour in
-                let hourEvents = eventsForSelectedDay.filter {
-                    Calendar.current.component(.hour, from: $0.startDate) == hour
-                }
-                
-                HStack(alignment: .top, spacing: 14) {
-                    Text(String(format: "%02d:00", hour))
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundStyle(Color.auraTextMuted)
-                        .frame(width: 50, alignment: .leading)
-                    
-                    if hourEvents.isEmpty {
-                        VStack {
+        let hours = ["2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM"]
+        
+        return ZStack(alignment: .topLeading) {
+            VStack(spacing: 0) {
+                ForEach(hours, id: \.self) { hourStr in
+                    HStack(alignment: .top, spacing: 12) {
+                        Text(hourStr)
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundStyle(Color.auraTextMuted)
+                            .frame(width: 44, alignment: .leading)
+                        
+                        VStack(spacing: 0) {
                             Divider()
                                 .background(Color.white.opacity(0.08))
                             Spacer()
                         }
-                    } else {
-                        VStack(spacing: 6) {
-                            ForEach(hourEvents) { ev in
-                                HStack {
-                                    Text(ev.title)
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundStyle(.white)
-                                    Spacer()
-                                    Text(formatTime(ev.startDate))
-                                        .font(.system(size: 11, design: .monospaced))
-                                        .foregroundStyle(Color.auraAmber)
-                                }
-                                .padding(10)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .fill(Color.auraCard)
-                                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.auraAmber.opacity(0.3), lineWidth: 0.8))
-                                )
+                    }
+                    .frame(height: 56)
+                }
+            }
+            
+            // Vertical Column Dividers for 3-Day or 7-Day view (IMG_8725, IMG_8727)
+            if selectedDaysRange > 1 {
+                GeometryReader { geo in
+                    let colWidth = (geo.size.width - 56) / CGFloat(selectedDaysRange)
+                    HStack(spacing: 0) {
+                        Spacer().frame(width: 56)
+                        ForEach(0..<selectedDaysRange, id: \.self) { i in
+                            Rectangle()
+                                .fill(Color.white.opacity(0.06))
+                                .frame(width: 0.6)
+                            if i < selectedDaysRange - 1 {
+                                Spacer().frame(width: colWidth)
                             }
                         }
                     }
                 }
-                .frame(minHeight: 48)
             }
+            
+            // Current Time Indicator (e.g. 3:35 PM - IMG_8724)
+            HStack(spacing: 0) {
+                Spacer().frame(width: 40)
+                Circle()
+                    .fill(Color.auraAmber)
+                    .frame(width: 10, height: 10)
+                    .shadow(color: Color.auraAmber.opacity(0.6), radius: 4)
+                
+                Rectangle()
+                    .fill(Color.auraAmber)
+                    .frame(height: 1.5)
+            }
+            .offset(y: 88) // Around 3:35 PM
         }
-        .padding(.top, 16)
+        .padding(.top, 10)
     }
     
-    // MARK: - Bottom Floating Action Button
+    // MARK: - Bottom Floating Controls (Capsule Switcher + Plus Button)
     private var bottomControls: some View {
-        HStack {
+        HStack(alignment: .center) {
+            // Mode Switcher Capsule (IMG_8721, IMG_8724)
+            HStack(spacing: 4) {
+                // List Mode Button
+                Button {
+                    AuraHaptic.selection()
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        isTimelineView = false
+                    }
+                } label: {
+                    Image(systemName: "list.bullet")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(!isTimelineView ? .black : .white.opacity(0.7))
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(!isTimelineView ? .white : .clear))
+                }
+                
+                // Grid/Timeline Mode Button
+                Button {
+                    AuraHaptic.selection()
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        isTimelineView = true
+                    }
+                } label: {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(isTimelineView ? .black : .white.opacity(0.7))
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(isTimelineView ? .white : .clear))
+                }
+                
+                // 1 | 3 | 7 Day Range Switcher (IMG_8724, IMG_8725)
+                if isTimelineView {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.12))
+                        .frame(width: 1, height: 18)
+                        .padding(.horizontal, 2)
+                    
+                    ForEach([1, 3, 7], id: \.self) { range in
+                        Button {
+                            AuraHaptic.selection()
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                selectedDaysRange = range
+                            }
+                        } label: {
+                            Text("\(range)")
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundStyle(selectedDaysRange == range ? .black : .white.opacity(0.7))
+                                .frame(width: 28, height: 28)
+                                .background(Circle().fill(selectedDaysRange == range ? .white : .clear))
+                        }
+                    }
+                }
+            }
+            .padding(4)
+            .background(
+                Capsule()
+                    .fill(Color(red: 0.12, green: 0.12, blue: 0.14).opacity(0.95))
+                    .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 0.8))
+            )
+            
             Spacer()
             
+            // Amber Plus Button (IMG_8724, IMG_8727)
             Menu {
                 Button {
                     onNavigateTab(0)
                 } label: {
-                    Label("Add Event with Nova", systemImage: "calendar.badge.plus")
-                }
-                
-                Button {
-                    showCalendarSyncSheet = true
-                } label: {
-                    Label("Sync Apple Calendar", systemImage: "arrow.triangle.2.circlepath")
+                    Label("Reminder", systemImage: "bell.fill")
                 }
                 
                 Button {
                     onNavigateTab(2)
                 } label: {
-                    Label("View Tasks", systemImage: "checklist")
+                    Label("Task", systemImage: "arrow.triangle.2.circlepath")
                 }
                 
                 Button {
                     onNavigateTab(0)
                 } label: {
-                    Label("Quick Voice Note", systemImage: "mic.fill")
+                    Label("Post", systemImage: "paperplane.fill")
+                }
+                
+                Button {
+                    onNavigateTab(0)
+                } label: {
+                    Label("Recording", systemImage: "waveform")
                 }
             } label: {
                 Image(systemName: "plus")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(.black)
-                    .frame(width: 54, height: 54)
+                    .frame(width: 52, height: 52)
                     .background(Circle().fill(Color.auraAmber))
-                    .shadow(color: Color.auraAmber.opacity(0.4), radius: 12, y: 5)
+                    .shadow(color: Color.auraAmber.opacity(0.4), radius: 10, y: 4)
             }
         }
     }

@@ -13,12 +13,11 @@ struct ChatView: View {
     @State private var isListeningVoice: Bool = false
     
     let suggestionChips = [
-        ("sparkles", "Năng lực Nova"),
-        ("drop.fill", "Uống 2 ly nước"),
-        ("figure.run", "Tập 30 phút"),
-        ("target", "Kế hoạch 4 bước"),
-        ("brain.head.profile", "Ghi nhớ sở thích"),
-        ("calendar.badge.clock", "Đặt lịch họp")
+        ("newspaper", "News"),
+        ("cloud.rain", "Weather"),
+        ("leaf.fill", "Motivation"),
+        ("chart.line.uptrend.xyaxis", "Price"),
+        ("sparkles", "Capabilities")
     ]
     
     var body: some View {
