@@ -9,8 +9,11 @@ struct ChatView: View {
     @Query private var memories: [UserMemory]
     
     @State private var inputText: String = ""
-    @State private var selectedChip: String = "Năng lực"
-    @State private var isListeningVoice: Bool = false
+    @State private var selectedChip: String = "Capabilities"
+    @State private var showUsageSheet: Bool = false
+    @State private var isAIThinking: Bool = false
+    
+    private var speechService = SpeechService.shared
     
     let suggestionChips = [
         ("newspaper", "News"),
@@ -75,36 +78,45 @@ struct ChatView: View {
         HStack {
             Spacer()
             
-            HStack(spacing: 8) {
-                // Online Green Dot
-                Circle()
-                    .fill(Color.auraSuccess)
-                    .frame(width: 8, height: 8)
-                
-                VStack(spacing: 1) {
-                    Text("Nova")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white)
+            Button {
+                AuraHaptic.selection()
+                showUsageSheet = true
+            } label: {
+                HStack(spacing: 8) {
+                    // Online Green Dot or Recording Red Dot
+                    Circle()
+                        .fill(speechService.isRecording ? Color.red : Color.auraSuccess)
+                        .frame(width: 8, height: 8)
                     
-                    Text("Memory AI · Active")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.auraTextSecondary)
+                    VStack(spacing: 1) {
+                        Text("Nova")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                        
+                        Text(speechService.isRecording ? "Listening..." : (isAIThinking ? "Thinking..." : "Memory AI · Active"))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(speechService.isRecording ? Color.auraAmber : Color.auraTextSecondary)
+                    }
                 }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(Color.auraCard)
+                        .overlay(
+                            Capsule()
+                                .stroke(speechService.isRecording ? Color.auraAmber : Color.auraBorder, lineWidth: 0.8)
+                        )
+                )
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 6)
-            .background(
-                Capsule()
-                    .fill(Color.auraCard)
-                    .overlay(
-                        Capsule()
-                            .stroke(Color.auraBorder, lineWidth: 0.8)
-                    )
-            )
+            .buttonStyle(.plain)
             
             Spacer()
         }
         .padding(.top, 8)
+        .sheet(isPresented: $showUsageSheet) {
+            UsageSheet()
+        }
     }
     
     // MARK: - Chips
@@ -250,9 +262,19 @@ struct ChatView: View {
                 Button {
                     handleVoiceRecordTapped()
                 } label: {
-                    Image(systemName: isListeningVoice ? "waveform" : "mic.fill")
-                        .font(.system(size: 17))
-                        .foregroundStyle(isListeningVoice ? Color.auraAmber : Color.auraTextSecondary)
+                    ZStack {
+                        if speechService.isRecording {
+                            Circle()
+                                .stroke(Color.auraAmber.opacity(0.4), lineWidth: 2)
+                                .frame(width: 28, height: 28)
+                                .scaleEffect(1.0 + speechService.audioLevel * 0.6)
+                                .animation(.easeOut(duration: 0.15), value: speechService.audioLevel)
+                        }
+                        
+                        Image(systemName: speechService.isRecording ? "waveform" : "mic.fill")
+                            .font(.system(size: 17))
+                            .foregroundStyle(speechService.isRecording ? Color.auraAmber : Color.auraTextSecondary)
+                    }
                 }
             } else {
                 Button {
@@ -271,7 +293,7 @@ struct ChatView: View {
                 .fill(Color.auraCard)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.auraBorder, lineWidth: 0.8)
+                        .stroke(speechService.isRecording ? Color.auraAmber.opacity(0.5) : Color.auraBorder, lineWidth: 0.8)
                 )
         )
     }
@@ -281,15 +303,20 @@ struct ChatView: View {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         
+        if speechService.isRecording {
+            speechService.stopRecording()
+        }
+        
         AuraHaptic.medium()
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         let userMsg = ChatMessage(role: "user", content: text)
         modelContext.insert(userMsg)
         inputText = ""
+        isAIThinking = true
         
-        // Intelligent Assistant Logic via AIService
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            let res = AIService.shared.processQuery(
+        // Intelligent Assistant Logic via AIService (Async Cloud / Local Engine)
+        Task {
+            let res = await AIService.shared.processQueryAsync(
                 text,
                 in: modelContext,
                 events: allEvents,
@@ -297,22 +324,37 @@ struct ChatView: View {
                 memories: memories
             )
             
-            let reply = ChatMessage(
-                role: "assistant",
-                content: res.content,
-                hasAction: res.hasAction,
-                actionTitle: res.actionTitle,
-                actionType: res.actionType
-            )
-            modelContext.insert(reply)
-            AuraHaptic.success()
-            try? modelContext.save()
+            await MainActor.run {
+                isAIThinking = false
+                let reply = ChatMessage(
+                    role: "assistant",
+                    content: res.content,
+                    hasAction: res.hasAction,
+                    actionTitle: res.actionTitle,
+                    actionType: res.actionType
+                )
+                modelContext.insert(reply)
+                AuraHaptic.success()
+                try? modelContext.save()
+            }
         }
     }
     
     private func handleChipTapped(_ chip: String) {
         switch chip {
-        case "Năng lực Nova":
+        case "News":
+            inputText = "Có tin tức hay cập nhật gì mới hôm nay?"
+            sendMessage()
+        case "Weather":
+            inputText = "Thời tiết hôm nay thế nào?"
+            sendMessage()
+        case "Motivation":
+            inputText = "Cho tôi một lời khuyên tạo động lực hôm nay"
+            sendMessage()
+        case "Price":
+            inputText = "Cập nhật giá vàng hoặc thị trường tài chính hôm nay"
+            sendMessage()
+        case "Capabilities", "Năng lực Nova":
             inputText = "Nova có thể làm được những gì?"
             sendMessage()
         case "Uống 2 ly nước":
@@ -337,19 +379,11 @@ struct ChatView: View {
     
     private func handleVoiceRecordTapped() {
         AuraHaptic.medium()
-        Task {
-            let micGranted = await PermissionsManager.shared.requestMicrophoneAccess()
-            let speechGranted = await PermissionsManager.shared.requestSpeechAccess()
-            
-            await MainActor.run {
-                if micGranted && speechGranted {
-                    isListeningVoice.toggle()
-                    if isListeningVoice {
-                        inputText = "Tôi vừa uống thêm 1 ly nước và hoàn thành bài tập thể dục"
-                    }
-                } else {
-                    PermissionsManager.shared.openSystemSettings()
-                }
+        if speechService.isRecording {
+            speechService.stopRecording()
+        } else {
+            speechService.startRecording { recognized in
+                self.inputText = recognized
             }
         }
     }

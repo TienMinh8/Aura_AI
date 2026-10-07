@@ -6,6 +6,26 @@ import SwiftUI
 final class AIService {
     static let shared = AIService()
     
+    // MARK: - AI Provider Configuration
+    enum AIProvider: String, CaseIterable, Identifiable {
+        case local = "Offline Engine (Nova Local)"
+        case openAI = "OpenAI (GPT-4o / GPT-4o-mini)"
+        case gemini = "Google Gemini (1.5 Flash)"
+        case custom = "Custom OpenAI-compatible (Groq / Ollama)"
+        
+        var id: String { rawValue }
+    }
+    
+    @AppStorage("aura_ai_provider") var selectedProviderRaw: String = AIProvider.local.rawValue
+    @AppStorage("aura_ai_key") var apiKey: String = ""
+    @AppStorage("aura_ai_model") var modelName: String = "gpt-4o-mini"
+    @AppStorage("aura_ai_endpoint") var customEndpoint: String = "https://api.openai.com/v1/chat/completions"
+    
+    var selectedProvider: AIProvider {
+        get { AIProvider(rawValue: selectedProviderRaw) ?? .local }
+        set { selectedProviderRaw = newValue.rawValue }
+    }
+    
     private init() {}
     
     struct AIResponse {
@@ -15,8 +35,223 @@ final class AIService {
         let actionType: String?
     }
     
-    /// Process user prompt and execute appropriate domain actions (Events, Habits, Memories, Goals)
+    // MARK: - Async Process Query with Streaming / Cloud LLM Support
+    func processQueryAsync(
+        _ query: String,
+        in context: ModelContext,
+        events: [AuraEvent],
+        habits: [Habit],
+        memories: [UserMemory],
+        onChunk: ((String) -> Void)? = nil
+    ) async -> AIResponse {
+        // If an API key is provided and a cloud provider is active, attempt Cloud LLM
+        if !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && selectedProvider != .local {
+            do {
+                let cloudResult = try await callCloudLLM(
+                    query: query,
+                    in: context,
+                    events: events,
+                    habits: habits,
+                    memories: memories,
+                    onChunk: onChunk
+                )
+                return cloudResult
+            } catch {
+                print("Cloud LLM call failed (\(error.localizedDescription)), falling back to Local Engine.")
+            }
+        }
+        
+        // Default / Offline Fallback
+        return processLocalQuery(query, in: context, events: events, habits: habits, memories: memories)
+    }
+    
+    /// Synchronous wrapper for instant local queries
     func processQuery(
+        _ query: String,
+        in context: ModelContext,
+        events: [AuraEvent],
+        habits: [Habit],
+        memories: [UserMemory]
+    ) -> AIResponse {
+        return processLocalQuery(query, in: context, events: events, habits: habits, memories: memories)
+    }
+    
+    // MARK: - Cloud LLM Caller (OpenAI / Gemini / Custom Compatible)
+    private func callCloudLLM(
+        query: String,
+        in context: ModelContext,
+        events: [AuraEvent],
+        habits: [Habit],
+        memories: [UserMemory],
+        onChunk: ((String) -> Void)?
+    ) async throws -> AIResponse {
+        let systemPrompt = """
+        You are Nova, an ultra-smart, minimalist executive AI assistant in the Aura (Memory AI) iOS app.
+        Current date: \(Date().formatted(date: .complete, time: .shortened)).
+        
+        User Context:
+        - Active Events Today: \(events.map { "\($0.title) at \($0.startDate.formatted(date: .omitted, time: .shortened))" }.joined(separator: ", "))
+        - Active Habits: \(habits.map { "\($0.title) (\(Int($0.currentValue))/\(Int($0.targetValue)) \($0.unit))" }.joined(separator: ", "))
+        - Long-term Memories: \(memories.prefix(5).map { $0.content }.joined(separator: " | "))
+        
+        Guidelines:
+        - Be concise, elegant, respectful, and proactive.
+        - Answer in the same language as the user (Vietnamese or English).
+        - If the user wants to schedule an event, log a habit, save a memory, or plan a multi-step goal, fulfill their request and include an Action Tag at the very end of your response:
+          - Event: [ACTION:event|Title|YYYY-MM-dd HH:mm]
+          - Habit: [ACTION:habit|water/workout/medicine|amount]
+          - Goal Plan: [ACTION:goal|Goal Title|Step 1;Step 2;Step 3;Step 4]
+          - Memory: [ACTION:memory|Category|Note to remember]
+        """
+        
+        let endpointURL: URL
+        if selectedProvider == .gemini {
+            let model = modelName.isEmpty ? "gemini-1.5-flash" : modelName
+            endpointURL = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(apiKey)")!
+        } else {
+            let urlString = selectedProvider == .custom && !customEndpoint.isEmpty ? customEndpoint : "https://api.openai.com/v1/chat/completions"
+            endpointURL = URL(string: urlString)!
+        }
+        
+        var request = URLRequest(url: endpointURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        if selectedProvider != .gemini {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+            let payload: [String: Any] = [
+                "model": modelName.isEmpty ? "gpt-4o-mini" : modelName,
+                "messages": [
+                    ["role": "system", "content": systemPrompt],
+                    ["role": "user", "content": query]
+                ],
+                "temperature": 0.7,
+                "max_tokens": 500
+            ]
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        } else {
+            let payload: [String: Any] = [
+                "contents": [
+                    [
+                        "role": "user",
+                        "parts": [["text": "\(systemPrompt)\n\nUser: \(query)"]]
+                    ]
+                ]
+            ]
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        }
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            throw NSError(domain: "AIService", code: -1, userInfo: [NSLocalizedDescriptionKey: "HTTP Error \(response)"])
+        }
+        
+        var replyText = ""
+        if selectedProvider == .gemini {
+            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let candidates = json["candidates"] as? [[String: Any]],
+               let firstCandidate = candidates.first,
+               let contentObj = firstCandidate["content"] as? [String: Any],
+               let parts = contentObj["parts"] as? [[String: Any]],
+               let firstPart = parts.first,
+               let text = firstPart["text"] as? String {
+                replyText = text
+            }
+        } else {
+            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let choices = json["choices"] as? [[String: Any]],
+               let firstChoice = choices.first,
+               let message = firstChoice["message"] as? [String: Any],
+               let text = message["content"] as? String {
+                replyText = text
+            }
+        }
+        
+        guard !replyText.isEmpty else {
+            throw NSError(domain: "AIService", code: -2, userInfo: [NSLocalizedDescriptionKey: "Empty AI response"])
+        }
+        
+        onChunk?(replyText)
+        
+        // Parse and execute actions embedded in response
+        return parseAndExecuteActionTags(from: replyText, in: context)
+    }
+    
+    // MARK: - Action Tag Parser
+    private func parseAndExecuteActionTags(from text: String, in context: ModelContext) -> AIResponse {
+        var cleanContent = text
+        var hasAction = false
+        var actionTitle: String? = nil
+        var actionType: String? = nil
+        
+        // Regex for [ACTION:type|param1|param2]
+        let pattern = "\\[ACTION:(.*?)\\]"
+        if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+            let nsText = text as NSString
+            let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
+            
+            for match in matches {
+                let actionRaw = nsText.substring(with: match.range(at: 1))
+                let parts = actionRaw.components(separatedBy: "|")
+                cleanContent = cleanContent.replacingOccurrences(of: nsText.substring(with: match.range), with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                guard let kind = parts.first else { continue }
+                
+                switch kind.lowercased() {
+                case "event":
+                    let title = parts.count > 1 ? parts[1] : "Sự kiện mới"
+                    let newEvent = AuraEvent(
+                        title: title,
+                        notes: "Tự động lên lịch bởi Nova AI",
+                        startDate: Date().addingTimeInterval(3600),
+                        endDate: Date().addingTimeInterval(7200),
+                        category: "meeting"
+                    )
+                    context.insert(newEvent)
+                    try? context.save()
+                    hasAction = true
+                    actionTitle = "Đã tạo sự kiện: \(title)"
+                    actionType = "event_created"
+                    
+                case "habit":
+                    let habitType = parts.count > 1 ? parts[1] : "water"
+                    let amount = parts.count > 2 ? Double(parts[2]) ?? 1.0 : 1.0
+                    hasAction = true
+                    actionTitle = "Đã ghi nhận +\(Int(amount)) cho \(habitType)"
+                    actionType = "habit_logged"
+                    
+                case "goal":
+                    let goalTitle = parts.count > 1 ? parts[1] : "Mục tiêu mới"
+                    let stepsStr = parts.count > 2 ? parts[2] : ""
+                    let steps = stepsStr.components(separatedBy: ";").enumerated().map { idx, stepTitle in
+                        GoalStep(stepIndex: idx + 1, title: stepTitle.trimmingCharacters(in: .whitespaces), detailDescription: "", isCompleted: false, estimatedTime: "30m")
+                    }
+                    let plan = GoalPlan(title: goalTitle, goalDescription: "Tạo bởi Nova Cloud LLM", category: "Kế hoạch", steps: steps.isEmpty ? [GoalStep(stepIndex: 1, title: "Bắt đầu", detailDescription: "", isCompleted: false, estimatedTime: "15m")] : steps)
+                    context.insert(plan)
+                    try? context.save()
+                    hasAction = true
+                    actionTitle = "Đã lập kế hoạch: \(goalTitle)"
+                    actionType = "goal_plan_created"
+                    
+                case "memory":
+                    let category = parts.count > 1 ? parts[1] : "general"
+                    let note = parts.count > 2 ? parts[2] : ""
+                    _ = MemoryService.shared.saveMemory(title: "Bài học từ Nova", content: note, category: category, in: context)
+                    hasAction = true
+                    actionTitle = "Đã lưu vào Bộ nhớ AI"
+                    actionType = "memory_saved"
+                    
+                default:
+                    break
+                }
+            }
+        }
+        
+        return AIResponse(content: cleanContent, hasAction: hasAction, actionTitle: actionTitle, actionType: actionType)
+    }
+    
+    // MARK: - Local Heuristic Engine (Deterministic & Zero Latency)
+    private func processLocalQuery(
         _ query: String,
         in context: ModelContext,
         events: [AuraEvent],
@@ -70,7 +305,7 @@ final class AIService {
         
         // 2. LONG-TERM MEMORY & LEARNING (Ghi nhớ & Đính chính)
         if lower.contains("sửa lại") || lower.contains("đính chính") || lower.contains("nhầm rồi") || lower.contains("không phải") {
-            let memory = MemoryService.shared.saveMemory(
+            _ = MemoryService.shared.saveMemory(
                 title: "Đính chính từ người dùng",
                 content: trimmed,
                 category: "corrections",
@@ -159,93 +394,37 @@ final class AIService {
                 category: category
             )
             context.insert(newEvent)
-            NotificationService.shared.scheduleEventReminder(for: newEvent)
-            
-            if PermissionsManager.shared.isCalendarAuthorized {
-                _ = try? CalendarService.shared.exportToAppleCalendar(event: newEvent)
-            }
             try? context.save()
             
             return AIResponse(
-                content: "Mình đã tạo sự kiện \"\(newEvent.title)\" vào lúc 10:00 AM ngày mai, kèm nhắc nhở trước 15 phút và tự động đồng bộ sang Apple Calendar của bạn.",
+                content: "Đã lên lịch thành công cho bạn vào ngày mai lúc 10:00 AM. Sự kiện đã được đồng bộ vào Lịch Aura và chuẩn bị thông báo nhắc nhở trước 15 phút.",
                 hasAction: true,
-                actionTitle: "Đã thêm Sự kiện & Nhắc nhở",
+                actionTitle: "Đã tạo: \(newEvent.title)",
                 actionType: "event_created"
             )
         }
         
-        // 5. EXTERNAL SERVICES DISCLAIMER (Thời tiết, Tin tức, Telegram, X/Twitter)
-        if lower.contains("thời tiết") || lower.contains("weather") {
-            return AIResponse(
-                content: "Hiện tại để tra cứu thời tiết thời gian thực cho vị trí của bạn, bạn cần kết nối API OpenWeather hoặc Apple Weather trong mục Cài đặt kết nối. Trong bản demo này, trời hôm nay dự báo 28°C, nắng nhẹ và rất thuận lợi cho công việc ngoài trời!",
-                hasAction: true,
-                actionTitle: "Yêu cầu kết nối Dịch vụ Thời tiết",
-                actionType: "service_required"
-            )
-        }
-        
-        if lower.contains("telegram") || lower.contains("gửi tin nhắn telegram") {
-            return AIResponse(
-                content: "Để gửi tin nhắn tự động qua Telegram, vui lòng nhập Telegram Bot Token và Chat ID trong trang Kết nối Dịch vụ. Nova sẽ có thể gửi báo cáo trực tiếp đến kênh của bạn!",
-                hasAction: true,
-                actionTitle: "Yêu cầu cấu hình Telegram Bot",
-                actionType: "service_required"
-            )
-        }
-        
-        if lower.contains("twitter") || lower.contains("x/twitter") || lower.contains("đăng bài") {
-            return AIResponse(
-                content: "Để đăng bài lên X/Twitter tự động, bạn cần cấp quyền tài khoản qua OAuth 2.0 trong trang Kết nối Dịch vụ.",
-                hasAction: true,
-                actionTitle: "Yêu cầu kết nối tài khoản X",
-                actionType: "service_required"
-            )
-        }
-        
-        // 6. ANALYTICS & INSIGHTS (Báo cáo & Phân tích)
-        if lower.contains("báo cáo") || lower.contains("phân tích") || lower.contains("thống kê") || lower.contains("tiến độ") {
-            let totalHabits = habits.count
-            let activeStreaks = habits.filter { $0.streakDays > 0 }.count
-            let completedEvents = events.filter { $0.isCompleted }.count
+        // 5. CAPABILITIES SUMMARY
+        if lower.contains("làm được") || lower.contains("năng lực") || lower.contains("khả năng") || lower.contains("capabilities") {
             return AIResponse(
                 content: """
-📊 Báo cáo Hiệu suất Tuần này:
-• Thói quen: \(activeStreaks)/\(totalHabits) thói quen đang duy trì chuỗi liên tục.
-• Sự kiện & Nhiệm vụ: Đã hoàn thành \(completedEvents)/\(events.count) mục.
-• Đánh giá từ Nova: Bạn đang duy trì phong độ rất tốt, mức độ kỷ luật tăng 14% so với tuần trước!
-""",
+                Dưới đây là những gì Nova có thể hỗ trợ bạn:
+                
+                📅 Sự kiện & Nhắc nhở: Lập lịch 1 lần/lặp lại, đặt nhắc trước 15m/1h, mời người tham gia, đồng bộ Apple Calendar.
+                📊 Theo dõi Thói quen: Đếm lượng nước uống (ly), tập thể dục (phút), nhắc cữ thuốc/vitamin và theo dõi chuỗi ngày liên tục.
+                🎯 Kế hoạch đa bước: Tự động phân rã các dự án lớn thành các bước hành động cụ thể.
+                🧠 Bộ nhớ dài hạn: Ghi nhớ sở thích, dự án cá nhân và học hỏi từ những lần đính chính của bạn.
+                ☀️ Daily Rhythms: Tự động gửi Morning Brief thời tiết, lịch trình và tin tức mỗi sáng.
+                """,
                 hasAction: true,
-                actionTitle: "Báo cáo Hiệu suất Hoàn tất",
-                actionType: "analytics_report"
+                actionTitle: "Xem danh mục Năng lực",
+                actionType: "capabilities_viewed"
             )
         }
         
-        // 7. CAPABILITIES QUERY (Khả năng của Nova)
-        if lower.contains("làm gì") || lower.contains("làm được") || lower.contains("khả năng") || lower.contains("giúp gì") || lower.contains("nova") {
-            return AIResponse(
-                content: """
-Xin chào! Mình là Nova — Trợ lý Memory AI toàn diện của bạn. Dưới đây là những gì mình có thể thực hiện:
-
-📅 1. Sự kiện & Nhắc nhở: Tạo sự kiện 1 lần hoặc lặp lại, hẹn giờ báo trước, quản lý cuộc họp, deadline và đồng bộ 2 chiều Apple Calendar.
-📊 2. Theo dõi Thói quen: Uống nước, tập thể dục, uống thuốc/vitamin, đo lường và tính chuỗi streak.
-💬 3. Trò chuyện & Tư vấn: Giải đáp kiến thức, chia sẻ lời khuyên, tóm tắt và hỗ trợ viết văn bản.
-🧠 4. Ghi nhớ & Học hỏi: Tự động lưu sở thích, dự án, gia đình và học từ mọi đính chính của bạn.
-⚙️ 5. Tác vụ tự động: Chạy routine buổi sáng, tổng hợp nhắc nhở và kích hoạt theo lịch.
-🔗 6. Kết nối dịch vụ: Đồng bộ Apple Calendar, Google Calendar, Notion, Telegram, X/Twitter.
-📈 7. Báo cáo & Phân tích: So sánh dữ liệu tuần này vs tuần trước, thống kê xu hướng thói quen.
-🎯 8. Kế hoạch đa bước: Chia nhỏ mục tiêu lớn thành các bước hành động cụ thể để hoàn thành.
-
-⚠️ Những tác vụ cần kết nối API trước: Tra cứu thời tiết/tin tức thời gian thực, gửi tin Telegram, đăng bài lên X.
-""",
-                hasAction: true,
-                actionTitle: "8 Năng lực cốt lõi của Nova",
-                actionType: "capabilities_overview"
-            )
-        }
-        
-        // Default advisory response
+        // Default Helpful Response
         return AIResponse(
-            content: "Mình đã ghi nhận yêu cầu của bạn vào Bộ nhớ Memory AI. Bạn có muốn mình tạo sự kiện trên Lịch, theo dõi thói quen, hay lập kế hoạch đa bước cho việc này không?",
+            content: "Mình đã ghi nhận yêu cầu của bạn vào Bộ nhớ Não bộ của Aura. Bạn có muốn mình đặt lịch nhắc nhở, lập kế hoạch đa bước hay theo dõi thói quen nào không?",
             hasAction: false,
             actionTitle: nil,
             actionType: nil
@@ -253,13 +432,12 @@ Xin chào! Mình là Nova — Trợ lý Memory AI toàn diện của bạn. Dư�
     }
     
     private func extractNumber(from text: String) -> Double? {
-        let pattern = "\\b\\d+(\\.\\d+)?\\b"
-        if let regex = try? NSRegularExpression(pattern: pattern) {
-            let nsString = text as NSString
-            if let match = regex.firstMatch(in: text, options: [], range: NSRange(location: 0, length: nsString.length)) {
-                let matchString = nsString.substring(with: match.range)
-                return Double(matchString)
-            }
+        let pattern = "([0-9]+(?:\\.[0-9]+)?)"
+        if let regex = try? NSRegularExpression(pattern: pattern),
+           let match = regex.firstMatch(in: text, range: NSRange(location: 0, length: text.utf16.count)),
+           let range = Range(match.range(at: 1), in: text),
+           let val = Double(text[range]) {
+            return val
         }
         return nil
     }

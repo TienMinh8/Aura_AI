@@ -40,6 +40,7 @@
 		BB0000820000000000000001 /* AnalyticsReportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000820000000000000001 /* AnalyticsReportSheet.swift */; };
 		BB0000830000000000000001 /* HabitsTrackerSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000830000000000000001 /* HabitsTrackerSection.swift */; };
 		BB0000840000000000000001 /* GoalPlansSectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000840000000000000001 /* GoalPlansSectionView.swift */; };
+		BB0000850000000000000001 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000850000000000000001 /* SpeechService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -78,6 +79,7 @@
 		AA0000820000000000000001 /* AnalyticsReportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Modals/AnalyticsReportSheet.swift"; sourceTree = "<group>"; };
 		AA0000830000000000000001 /* HabitsTrackerSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Today/HabitsTrackerSection.swift"; sourceTree = "<group>"; };
 		AA0000840000000000000001 /* GoalPlansSectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Tasks/GoalPlansSectionView.swift"; sourceTree = "<group>"; };
+		AA0000850000000000000001 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/SpeechService.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -143,6 +145,7 @@
 				AA0000820000000000000001 /* AnalyticsReportSheet.swift */,
 				AA0000830000000000000001 /* HabitsTrackerSection.swift */,
 				AA0000840000000000000001 /* GoalPlansSectionView.swift */,
+				AA0000850000000000000001 /* SpeechService.swift */,
 				CC0000010000000000000001 /* Info.plist */,
 			);
 			path = Aura;
@@ -248,6 +251,7 @@
 				BB0000820000000000000001 /* AnalyticsReportSheet.swift in Sources */,
 				BB0000830000000000000001 /* HabitsTrackerSection.swift in Sources */,
 				BB0000840000000000000001 /* GoalPlansSectionView.swift in Sources */,
+				BB0000850000000000000001 /* SpeechService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
